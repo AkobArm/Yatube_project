@@ -15,11 +15,16 @@ class Group(models.Model):
 
 
 class Post(models.Model):
-    text = models.TextField(help_text='Текст нового поста')
-    pub_date = models.DateTimeField(auto_now_add=True)
+    text = models.TextField(
+        'Текст Поста',
+        help_text='Текст нового поста')
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True)
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Автор'
     )
     group = models.ForeignKey(
         Group,
@@ -27,7 +32,11 @@ class Post(models.Model):
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
+        verbose_name='Группа'
     )
+
+    def __str__(self):
+        return self.text[:15]
 
     class Meta:
         ordering = ['-pub_date']
