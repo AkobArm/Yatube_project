@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Кастомный 404{% endblock %}
+{% block content %}
+    <h1>Кастомный 404</h1>
+    <p>Страницы с адресом {{ path }} не существует</p>
+    <p>Не суй свой нос куда не надо</p>
+    <a href="{% url 'posts:index' %}">Идите на главную</a>
+{% endblock %}
