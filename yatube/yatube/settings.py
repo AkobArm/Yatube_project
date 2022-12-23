@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'sorl.thumbnail',
 ]
 
 MIDDLEWARE = [
@@ -134,6 +135,10 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 OBJECTS_PER_PAGE = 10
 TEXT_TITLE = 30
 CSRF_FAILURE_VIEW = 'core/views.csrf_failure'
