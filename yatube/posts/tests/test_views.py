@@ -1,7 +1,4 @@
-import tempfile
-
 from django import forms
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -9,8 +6,6 @@ from django.urls import reverse
 from ..models import Group, Post
 
 User = get_user_model()
-
-
 
 
 class PostPagesTest(TestCase):
@@ -31,9 +26,11 @@ class PostPagesTest(TestCase):
                 text='Тестовый пост',
                 group=cls.group,
             )
-        cls.authorised_client = Client()
-        cls.authorised_client.force_login(cls.user)
-        cls.guest_client = Client()
+
+    def setUp(self):
+        self.guest_client = Client()
+        self.authorised_client = Client()
+        self.authorised_client.force_login(PostPagesTest.user)
 
     def test_pages_uses_correct_template(self):
         id_post = PostPagesTest.posts['post0'].id
@@ -184,5 +181,3 @@ class PaginatorViewsTest(TestCase):
         for address in addresses:
             response = self.authorised_client.get(address + '?page=2')
             self.assertEqual(len(response.context['page_obj']), 3)
-
-

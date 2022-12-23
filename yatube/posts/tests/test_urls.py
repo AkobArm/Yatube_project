@@ -7,49 +7,36 @@ class PostURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.guest_client = Client()
-        cls.user = User.objects.create(username='User')
-        cls.authorized_client = Client()
-        cls.authorized_client.force_login(cls.user)
-        # Создадим пост в БД
-        cls.post = Post.objects.create(
-            text='Тестовая запись',
-            author=cls.user,
-            id=7,
-        )
+        cls.user = User.objects.create_user(username='User')
+
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test-slug',
-            description='Описание группы',
+            description='Описание тестовой группы',
+        )
+        cls.post = Post.objects.create(
+            text='Тестовый текст',
+            author=cls.user,
+            id=7,
         )
 
-    def test_home_url_exists_at_desired_location(self):
-        response = self.guest_client.get('/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+    def setUp(self):
+        self.guest_client = Client()
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
 
-    def test_group_url_exists_at_desired_location(self):
-        response = self.guest_client.get('/group/test-slug/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+    def test_post_create_redirect_anonymous_on_admin_login(self):
+        """Проверка на редирект неавторизованного пользователя"""
+        response = self.guest_client.get("/create/")
+        self.assertRedirects(response, "/auth/login/?next=/create/")
 
-    def test_profile_url_exists_at_desired_location(self):
-        response = self.guest_client.get('/profile/User/')
+    def test_post_edit_is_available_only_author(self):
+        """Проверяем, что редактирование поста доступно только автору"""
+        self.user = User.objects.get(username=self.user)
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+        response = self.authorized_client.get(f"/posts/{self.post.id}/edit/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_post_url_exists_at_desired_location(self):
-        response = self.guest_client.get('/posts/7/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_post_edit_url_exists_at_desired_location(self):
-        response = self.authorized_client.get('/posts/7/edit/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_post_create_url_exists_at_desired_location(self):
-        response = self.authorized_client.get('/create/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_unexisting_page_url_exists_at_desired_location(self):
-        response = self.guest_client.get('/unexisting_page/')
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_urls_uses_correct_template(self):
         templates_url_names = {
@@ -65,6 +52,17 @@ class PostURLTests(TestCase):
                 response = self.authorized_client.get(address)
                 self.assertTemplateUsed(response, template)
 
-    def test_404(self):
-        response = self.guest_client.get('/unexisting_page/')
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+    def test_urls_working_correct(self):
+        """Проверка доступности адресов"""
+        urls = {
+            '/': HTTPStatus.OK,
+            '/group/test-slug/': HTTPStatus.OK,
+            '/profile/User/': HTTPStatus.OK,
+            '/posts/7/': HTTPStatus.OK,
+            '/create/': HTTPStatus.OK,
+            '/posts/7/edit/': HTTPStatus.OK,
+        }
+        for address, status in urls.items():
+            with self.subTest(address=address):
+                response = self.authorized_client.get(address)
+                self.assertEqual(response.status_code, status)
